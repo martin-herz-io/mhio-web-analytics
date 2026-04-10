@@ -1,0 +1,14 @@
+services:
+  mhio-web-analytics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mhio-web-analytics:latest
+    env_file:
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    restart: unless-stopped

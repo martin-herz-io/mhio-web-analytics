@@ -79,17 +79,33 @@ npm test
 
 ## Docker
 
-Build the image:
+Environment variables:
 
 ```bash
-docker build -t mhio-web-analytics .
+cp .env.example .env
 ```
 
-Run the container:
+`docker-compose.yml` already loads `.env.example` as defaults and applies `.env` as optional overrides.
+
+Run with Docker Compose:
 
 ```bash
-docker run --rm -p 3000:3000 --env-file .env mhio-web-analytics
+docker compose up --build
 ```
+
+Run detached:
+
+```bash
+docker compose up --build -d
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+The service receives all runtime variables via `env_file` from `.env.example` and optional `.env` overrides.
 
 ## Configuration
 
