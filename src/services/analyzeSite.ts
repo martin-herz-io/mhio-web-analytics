@@ -2,6 +2,7 @@ import { buildRecommendations } from "../scoring/buildRecommendations.js";
 import { buildSummary } from "../scoring/buildSummary.js";
 import { scoreReport } from "../scoring/scoreReport.js";
 import { appConfig } from "../config/env.js";
+import { resolveLocale, text } from "../i18n/index.js";
 import type {
   CrawledPageResult,
   LinkGraphReport,
@@ -12,6 +13,7 @@ import type {
   Recommendation,
   AnalysisCheck,
   PageData,
+  Locale,
 } from "../types/analysis.js";
 import { buildPageReport } from "./buildPageReport.js";
 import { discoverRobots, discoverSitemapUrls, isAllowedByRobots } from "./crawlDiscovery.js";
@@ -121,6 +123,7 @@ async function processCrawlTarget(input: {
   origin: string;
   robotsData: Awaited<ReturnType<typeof discoverRobots>>;
   visited: Set<string>;
+  locale: Locale;
   includePerformance?: boolean;
   performanceStrategy?: PerformanceStrategy;
 }): Promise<
@@ -173,11 +176,16 @@ async function processCrawlTarget(input: {
     const brokenInternalLinkCount = await detectBrokenInternalLinks(pageData, origin);
     const includePerformance = input.includePerformance ?? appConfig.performance.defaultEnabled;
     const performance = includePerformance
-      ? await fetchPagePerformance(fetchedPage.finalUrl, input.performanceStrategy || appConfig.performance.strategy)
+      ? await fetchPagePerformance(
+          fetchedPage.finalUrl,
+          input.performanceStrategy || appConfig.performance.strategy,
+          input.locale,
+        )
       : null;
     const report = buildPageReport({
       requestedUrl: current.url,
       fetchedUrl: fetchedPage.finalUrl,
+      locale: input.locale,
       pageData: {
         ...pageData,
         brokenInternalLinkCount,
@@ -253,7 +261,7 @@ async function processCrawlTarget(input: {
         url: current.url,
         depth: current.depth,
         status: "failed",
-        error: error instanceof Error ? error.message : "Unknown crawl error",
+        error: error instanceof Error ? error.message : text(input.locale, { en: "Unknown crawl error", de: "Unbekannter Crawl-Fehler" }),
       },
       discoveredUrls: [],
       blockedByRobots: 0,
@@ -371,7 +379,7 @@ function collectBoilerplateDominatedPages(analyzedPages: Array<CrawledPageResult
     .map((page) => page.url);
 }
 
-function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
+function buildSiteIssues(pages: CrawledPageResult[], locale: Locale): SiteIssue[] {
   const analyzedPages = pages.filter((page): page is CrawledPageResult & { report: NonNullable<CrawledPageResult["report"]> } => page.status === "analyzed" && Boolean(page.report));
   const failedPages = pages.filter((page) => page.status === "failed");
   const pagesWithoutMeta = analyzedPages.filter((page) =>
@@ -405,7 +413,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-fetch-failures",
       severity: "high",
-      message: "Einige Seiten konnten nicht geladen oder analysiert werden.",
+      message: text(locale, {
+        en: "Some pages could not be fetched or analyzed.",
+        de: "Einige Seiten konnten nicht geladen oder analysiert werden.",
+      }),
       affectedPages: failedPages.map((page) => page.url),
     });
   }
@@ -414,7 +425,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-missing-meta-description",
       severity: pagesWithoutMeta.length >= 3 ? "high" : "medium",
-      message: "Mehrere Seiten haben keine Meta Description.",
+      message: text(locale, {
+        en: "Multiple pages are missing a meta description.",
+        de: "Mehrere Seiten haben keine Meta Description.",
+      }),
       affectedPages: pagesWithoutMeta.map((page) => page.url),
     });
   }
@@ -423,7 +437,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-missing-h1",
       severity: pagesWithoutH1.length >= 3 ? "high" : "medium",
-      message: "Auf mehreren Seiten fehlt eine H1.",
+      message: text(locale, {
+        en: "Multiple pages are missing an H1.",
+        de: "Auf mehreren Seiten fehlt eine H1.",
+      }),
       affectedPages: pagesWithoutH1.map((page) => page.url),
     });
   }
@@ -432,7 +449,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-long-paragraphs",
       severity: pagesWithLongParagraphs.length >= 3 ? "medium" : "low",
-      message: "Mehrere Seiten enthalten schwer lesbare, sehr lange Textbloecke.",
+      message: text(locale, {
+        en: "Multiple pages contain very long text blocks that reduce readability.",
+        de: "Mehrere Seiten enthalten schwer lesbare, sehr lange Textblöcke.",
+      }),
       affectedPages: pagesWithLongParagraphs.map((page) => page.url),
     });
   }
@@ -441,7 +461,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-noindex-pages",
       severity: noindexPages.length >= 3 ? "high" : "medium",
-      message: "Mehrere analysierte Seiten sind auf noindex gesetzt.",
+      message: text(locale, {
+        en: "Multiple analyzed pages are set to noindex.",
+        de: "Mehrere analysierte Seiten sind auf noindex gesetzt.",
+      }),
       affectedPages: noindexPages.map((page) => page.url),
     });
   }
@@ -450,7 +473,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-canonical-conflicts",
       severity: canonicalConflictPages.length >= 2 ? "high" : "medium",
-      message: "Einige Seiten haben Canonical-Ziele, die nicht zur analysierten URL passen.",
+      message: text(locale, {
+        en: "Some pages have canonical targets that do not match the analyzed URL.",
+        de: "Einige Seiten haben Canonical-Ziele, die nicht zur analysierten URL passen.",
+      }),
       affectedPages: canonicalConflictPages.map((page) => page.url),
     });
   }
@@ -459,7 +485,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-broken-internal-links",
       severity: brokenInternalLinkPages.length >= 2 ? "high" : "medium",
-      message: "Auf mehreren Seiten wurden defekte interne Links gefunden.",
+      message: text(locale, {
+        en: "Broken internal links were found across multiple pages.",
+        de: "Auf mehreren Seiten wurden defekte interne Links gefunden.",
+      }),
       affectedPages: brokenInternalLinkPages.map((page) => page.url),
     });
   }
@@ -468,7 +497,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-missing-structured-data",
       severity: "medium",
-      message: "Auf den analysierten Seiten wurde kein strukturiertes JSON-LD Markup erkannt.",
+      message: text(locale, {
+        en: "No structured JSON-LD markup was detected on the analyzed pages.",
+        de: "Auf den analysierten Seiten wurde kein strukturiertes JSON-LD-Markup erkannt.",
+      }),
       affectedPages: analyzedPages.map((page) => page.url),
     });
   }
@@ -477,7 +509,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-missing-hreflang",
       severity: "low",
-      message: "Es wurden keine hreflang-Verweise erkannt.",
+      message: text(locale, {
+        en: "No hreflang references were detected.",
+        de: "Es wurden keine hreflang-Verweise erkannt.",
+      }),
       affectedPages: analyzedPages.map((page) => page.url),
     });
   }
@@ -486,7 +521,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-invalid-structured-data",
       severity: invalidStructuredDataPages.length >= 2 ? "medium" : "low",
-      message: "Einige Seiten enthalten unvollstaendige strukturierte Daten.",
+      message: text(locale, {
+        en: "Some pages contain incomplete structured data.",
+        de: "Einige Seiten enthalten unvollständige strukturierte Daten.",
+      }),
       affectedPages: invalidStructuredDataPages.map((page) => page.url),
     });
   }
@@ -495,7 +533,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-thin-content",
       severity: thinContentPages.length >= 3 ? "medium" : "low",
-      message: "Mehrere Seiten enthalten nur sehr wenig eigenstaendigen Inhalt.",
+      message: text(locale, {
+        en: "Multiple pages contain very little original content.",
+        de: "Mehrere Seiten enthalten nur sehr wenig eigenständigen Inhalt.",
+      }),
       affectedPages: thinContentPages.map((page) => page.url),
     });
   }
@@ -504,7 +545,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-duplicate-content",
       severity: duplicateContentFingerprints.length >= 2 ? "high" : "medium",
-      message: "Es wurden Seiten mit sehr aehnlichem oder identischem Inhalt erkannt.",
+      message: text(locale, {
+        en: "Pages with very similar or identical content were detected.",
+        de: "Es wurden Seiten mit sehr ähnlichem oder identischem Inhalt erkannt.",
+      }),
       affectedPages: analyzedPages
         .filter((page) =>
           duplicateContentFingerprints.some((group) => group.includes(page.pageMeta?.contentFingerprint || "")),
@@ -517,7 +561,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-unlinked-pages",
       severity: linkGraph.pagesWithoutIncomingInternalLinks.length >= 2 ? "medium" : "low",
-      message: "Einige gecrawlte Seiten haben keine eingehenden internen Links.",
+      message: text(locale, {
+        en: "Some crawled pages do not have any incoming internal links.",
+        de: "Einige gecrawlte Seiten haben keine eingehenden internen Links.",
+      }),
       affectedPages: linkGraph.pagesWithoutIncomingInternalLinks,
     });
   }
@@ -526,7 +573,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-weak-internal-linking",
       severity: linkGraph.weaklyLinkedPages.length >= 3 ? "medium" : "low",
-      message: "Mehrere Seiten sind intern nur sehr schwach verlinkt.",
+      message: text(locale, {
+        en: "Multiple pages are only weakly linked internally.",
+        de: "Mehrere Seiten sind intern nur sehr schwach verlinkt.",
+      }),
       affectedPages: linkGraph.weaklyLinkedPages,
     });
   }
@@ -535,7 +585,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-canonical-clusters",
       severity: canonicalClusters.length >= 2 ? "medium" : "low",
-      message: "Mehrere Seiten bilden dieselben Canonical-Cluster.",
+      message: text(locale, {
+        en: "Multiple pages form the same canonical clusters.",
+        de: "Mehrere Seiten bilden dieselben Canonical-Cluster.",
+      }),
       affectedPages: canonicalClusters.flat(),
     });
   }
@@ -544,7 +597,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-hreflang-inconsistencies",
       severity: hreflangInconsistencyPages.length >= 2 ? "medium" : "low",
-      message: "Einige hreflang-Verweise sind nicht gegenseitig oder unvollstaendig.",
+      message: text(locale, {
+        en: "Some hreflang references are not reciprocal or are incomplete.",
+        de: "Einige hreflang-Verweise sind nicht gegenseitig oder unvollständig.",
+      }),
       affectedPages: hreflangInconsistencyPages,
     });
   }
@@ -553,7 +609,10 @@ function buildSiteIssues(pages: CrawledPageResult[]): SiteIssue[] {
     issues.push({
       id: "site-boilerplate-heavy-pages",
       severity: boilerplateDominatedPages.length >= 2 ? "medium" : "low",
-      message: "Einige Seiten wirken stark template- oder boilerplate-dominiert.",
+      message: text(locale, {
+        en: "Some pages appear heavily dominated by template or boilerplate content.",
+        de: "Einige Seiten wirken stark template- oder boilerplate-dominiert.",
+      }),
       affectedPages: boilerplateDominatedPages,
     });
   }
@@ -770,8 +829,9 @@ function aggregateSiteChecks(pages: CrawledPageResult[]): AnalysisCheck[] {
 export async function analyzeSite(
   url: string,
   maxPages?: number,
-  options: { includePerformance?: boolean; performanceStrategy?: PerformanceStrategy } = {},
+  options: { includePerformance?: boolean; performanceStrategy?: PerformanceStrategy; locale?: Locale } = {},
 ): Promise<SiteAnalysisReport> {
+  const locale = resolveLocale(options.locale);
   const normalizedUrl = normalizeSiteUrl(url);
   const origin = new URL(normalizedUrl).origin;
   const pageLimit = clampMaxPages(maxPages);
@@ -823,6 +883,7 @@ export async function analyzeSite(
           origin,
           robotsData,
           visited,
+          locale,
           includePerformance: options.includePerformance ?? appConfig.performance.defaultEnabled,
           performanceStrategy: options.performanceStrategy,
         }),
@@ -858,7 +919,7 @@ export async function analyzeSite(
   const summary = buildSummary(siteChecks);
   const metrics = buildSiteMetrics(pages);
   const linkGraph = buildLinkGraph(pages);
-  const siteIssues = buildSiteIssues(pages);
+  const siteIssues = buildSiteIssues(pages, locale);
   const recommendations: Recommendation[] = [
     ...buildRecommendations(siteChecks),
     ...siteIssues.slice(0, 3).map((issue) => ({
@@ -873,6 +934,7 @@ export async function analyzeSite(
   return {
     url: normalizedUrl,
     analyzedAt: new Date().toISOString(),
+    locale,
     crawl: {
       maxPages: pageLimit,
       crawledPages: pages.length,

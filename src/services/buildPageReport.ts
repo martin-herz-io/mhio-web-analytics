@@ -4,19 +4,20 @@ import { runUxChecks } from "../analyzers/uxChecks.js";
 import { buildRecommendations } from "../scoring/buildRecommendations.js";
 import { buildSummary } from "../scoring/buildSummary.js";
 import { scoreReport } from "../scoring/scoreReport.js";
-import type { AnalysisReport, PageData, PerformanceReport } from "../types/analysis.js";
+import type { AnalysisReport, Locale, PageData, PerformanceReport } from "../types/analysis.js";
 
 export function buildPageReport(input: {
   requestedUrl: string;
   fetchedUrl: string;
   pageData: PageData;
+  locale: Locale;
   analyzedAt?: string;
   performance?: PerformanceReport | null;
 }): AnalysisReport {
   const checks = [
-    ...runSeoChecks(input.pageData),
-    ...runContentChecks(input.pageData),
-    ...runUxChecks(input.pageData),
+    ...runSeoChecks(input.pageData, input.locale),
+    ...runContentChecks(input.pageData, input.locale),
+    ...runUxChecks(input.pageData, input.locale),
   ];
   const scores = scoreReport(checks);
 
@@ -24,6 +25,7 @@ export function buildPageReport(input: {
     url: input.requestedUrl,
     fetchedUrl: input.fetchedUrl,
     analyzedAt: input.analyzedAt || new Date().toISOString(),
+    locale: input.locale,
     scores,
     metrics: {
       wordCount: input.pageData.wordCount,

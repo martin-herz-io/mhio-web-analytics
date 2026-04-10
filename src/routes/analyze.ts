@@ -9,6 +9,7 @@ type HttpError = Error & { statusCode?: number };
 
 const analyzeRequestSchema = z.object({
   url: z.url(),
+  locale: z.enum(["en", "de"]).optional(),
   includePerformance: z.boolean().optional(),
   performanceStrategy: z.enum(["mobile", "desktop"]).optional(),
 });
@@ -16,6 +17,7 @@ const analyzeRequestSchema = z.object({
 const analyzeSiteRequestSchema = z.object({
   url: z.url(),
   maxPages: z.number().int().min(1).max(appConfig.crawler.hardMaxPages).optional(),
+  locale: z.enum(["en", "de"]).optional(),
   includePerformance: z.boolean().optional(),
   performanceStrategy: z.enum(["mobile", "desktop"]).optional(),
 });
@@ -24,8 +26,8 @@ export const analyzeRouter = Router();
 
 analyzeRouter.post("/", async (req, res, next) => {
   try {
-    const { url, includePerformance, performanceStrategy } = analyzeRequestSchema.parse(req.body);
-    const report = await analyzeUrl(url, { includePerformance, performanceStrategy });
+    const { url, locale, includePerformance, performanceStrategy } = analyzeRequestSchema.parse(req.body);
+    const report = await analyzeUrl(url, { locale, includePerformance, performanceStrategy });
 
     res.json(report);
   } catch (error) {
@@ -42,8 +44,8 @@ analyzeRouter.post("/", async (req, res, next) => {
 
 analyzeRouter.post("/site", async (req, res, next) => {
   try {
-    const { url, maxPages, includePerformance, performanceStrategy } = analyzeSiteRequestSchema.parse(req.body);
-    const report = await analyzeSite(url, maxPages, { includePerformance, performanceStrategy });
+    const { url, maxPages, locale, includePerformance, performanceStrategy } = analyzeSiteRequestSchema.parse(req.body);
+    const report = await analyzeSite(url, maxPages, { locale, includePerformance, performanceStrategy });
 
     res.json(report);
   } catch (error) {

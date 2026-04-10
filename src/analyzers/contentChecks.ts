@@ -1,11 +1,12 @@
 import { createCheck } from "./checkHelpers.js";
-import type { AnalysisCheck, PageData } from "../types/analysis.js";
+import { text } from "../i18n/index.js";
+import type { AnalysisCheck, Locale, PageData } from "../types/analysis.js";
 
 function countWords(text: string): number {
   return text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length;
 }
 
-export function runContentChecks(pageData: PageData): AnalysisCheck[] {
+export function runContentChecks(pageData: PageData, locale: Locale): AnalysisCheck[] {
   const paragraphWordCounts = pageData.paragraphs.map(countWords);
   const longParagraphs = paragraphWordCounts.filter((count) => count > 120).length;
   const averageParagraphLength =
@@ -25,10 +26,19 @@ export function runContentChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 8,
       message:
         pageData.wordCount >= 300
-          ? "Die Seite hat ausreichend Fliesstext fuer eine inhaltliche Bewertung."
+          ? text(locale, {
+              en: "The page contains enough body text for a meaningful content evaluation.",
+              de: "Die Seite hat ausreichend Fließtext für eine inhaltliche Bewertung.",
+            })
           : pageData.wordCount >= 120
-            ? "Die Seite hat etwas Inhalt, wirkt aber noch eher knapp."
-            : "Die Seite enthaelt sehr wenig Fliesstext.",
+            ? text(locale, {
+                en: "The page has some content, but still feels rather short.",
+                de: "Die Seite hat etwas Inhalt, wirkt aber noch eher knapp.",
+              })
+            : text(locale, {
+                en: "The page contains very little body text.",
+                de: "Die Seite enthält sehr wenig Fließtext.",
+              }),
       details: { wordCount: pageData.wordCount },
     }),
     createCheck({
@@ -39,10 +49,19 @@ export function runContentChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 10,
       message:
         longParagraphs === 0
-          ? "Die Absatzlaengen wirken gut lesbar."
+          ? text(locale, {
+              en: "Paragraph lengths look easy to read.",
+              de: "Die Absatzlängen wirken gut lesbar.",
+            })
           : longParagraphs <= 2
-            ? "Es gibt einzelne sehr lange Textbloecke."
-            : "Es gibt viele sehr lange Textbloecke, die den Lesefluss bremsen.",
+            ? text(locale, {
+                en: "There are a few very long text blocks.",
+                de: "Es gibt einzelne sehr lange Textblöcke.",
+              })
+            : text(locale, {
+                en: "There are many very long text blocks that slow down readability.",
+                de: "Es gibt viele sehr lange Textblöcke, die den Lesefluss bremsen.",
+              }),
       details: {
         longParagraphs,
         averageParagraphLength,
@@ -56,10 +75,19 @@ export function runContentChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 8,
       message:
         wordsPerHeading <= 180
-          ? "Der Inhalt ist ordentlich durch Ueberschriften strukturiert."
+          ? text(locale, {
+              en: "The content is structured well with headings.",
+              de: "Der Inhalt ist ordentlich durch Überschriften strukturiert.",
+            })
           : wordsPerHeading <= 260
-            ? "Der Inhalt koennte durch mehr Zwischenueberschriften besser gegliedert werden."
-            : "Es gibt zu wenig Zwischenueberschriften fuer die Textmenge.",
+            ? text(locale, {
+                en: "The content could be broken up more clearly with additional subheadings.",
+                de: "Der Inhalt könnte durch mehr Zwischenüberschriften besser gegliedert werden.",
+              })
+            : text(locale, {
+                en: "There are too few subheadings for the amount of text.",
+                de: "Es gibt zu wenig Zwischenüberschriften für die Textmenge.",
+              }),
       details: {
         headingCount: pageData.headings.length,
         wordsPerHeading,
@@ -73,10 +101,19 @@ export function runContentChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 7,
       message:
         averageSentenceLength <= 20
-          ? "Die Satzlaenge wirkt angenehm lesbar."
+          ? text(locale, {
+              en: "Sentence length feels comfortable to read.",
+              de: "Die Satzlänge wirkt angenehm lesbar.",
+            })
           : averageSentenceLength <= 28
-            ? "Einige Saetze wirken recht lang."
-            : "Sehr lange Saetze koennen den Textfluss deutlich verschlechtern.",
+            ? text(locale, {
+                en: "Some sentences feel fairly long.",
+                de: "Einige Sätze wirken recht lang.",
+              })
+            : text(locale, {
+                en: "Very long sentences can noticeably hurt text flow.",
+                de: "Sehr lange Sätze können den Textfluss deutlich verschlechtern.",
+              }),
       details: {
         averageSentenceLength,
         sentenceCount: pageData.sentenceCount,
@@ -90,10 +127,19 @@ export function runContentChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 5,
       message:
         pageData.listCount >= 1 || pageData.wordCount < 200
-          ? "Der Inhalt nutzt oder benoetigt keine auffaellige Listenstruktur."
+          ? text(locale, {
+              en: "The content either already uses lists or does not strongly need them.",
+              de: "Der Inhalt nutzt oder benötigt keine auffällige Listenstruktur.",
+            })
           : pageData.headings.length >= 3
-            ? "Listen oder Aufzaehlungen koennten den Inhalt noch leichter scanbar machen."
-            : "Laengerer Inhalt ohne Listen wirkt schwerer ueberfliegbar.",
+            ? text(locale, {
+                en: "Lists or bullet points could make the content easier to scan.",
+                de: "Listen oder Aufzählungen könnten den Inhalt noch leichter scanbar machen.",
+              })
+            : text(locale, {
+                en: "Longer content without lists is harder to skim.",
+                de: "Längerer Inhalt ohne Listen wirkt schwerer überfliegbar.",
+              }),
       details: {
         listCount: pageData.listCount,
         wordCount: pageData.wordCount,

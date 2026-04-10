@@ -96,12 +96,16 @@ describe("POST /analyze", () => {
     const json = response._getJSONData();
 
     expect(response.statusCode).toBe(200);
+    expect(json.locale).toBe("en");
     expect(json.scores.overall).toBeGreaterThan(0);
     expect(json.metrics.wordCount).toBeGreaterThan(20);
     expect(json.metrics.hreflangCount).toBe(2);
     expect(json.metrics.structuredDataTypeCount).toBe(2);
     expect(json.metrics.invalidStructuredDataCount).toBe(1);
     expect(json.recommendations).toBeInstanceOf(Array);
+    expect(json.checks.find((check: { id: string }) => check.id === "seo-title")?.message).toBe(
+      "The title is present and falls within a strong SEO length range.",
+    );
     expect(json.checks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "seo-title" }),
@@ -111,6 +115,49 @@ describe("POST /analyze", () => {
         expect.objectContaining({ id: "seo-structured-data", status: "warning" }),
       ]),
     );
+  });
+
+  it("returns localized German messages when locale is set to de", async () => {
+    const html = `
+      <!doctype html>
+      <html lang="de">
+        <head>
+          <title>Mehrere H1 Testseite</title>
+        </head>
+        <body>
+          <h1>Erste H1</h1>
+          <h1>Zweite H1</h1>
+          <p>Ein etwas längerer deutscher Beispieltext, damit die Seite nicht vollständig leer wirkt und die Analyse sauber durchlaufen kann.</p>
+        </body>
+      </html>
+    `;
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        url: "https://example.com/",
+        status: 200,
+        redirected: false,
+        headers: {
+          get: (name: string) => (name.toLowerCase() === "content-type" ? "text/html; charset=utf-8" : ""),
+        },
+        text: async () => html,
+      }),
+    );
+
+    const response = await invokeApp(createApp(), {
+      method: "POST",
+      url: "/analyze",
+      body: { url: "https://example.com", locale: "de" },
+    });
+
+    const json = response._getJSONData();
+    const h1Check = json.checks.find((check: { id: string }) => check.id === "seo-h1");
+
+    expect(response.statusCode).toBe(200);
+    expect(json.locale).toBe("de");
+    expect(h1Check?.message).toBe("Die Seite hat mehrere H1-Überschriften.");
   });
 
   it("optionally includes PageSpeed performance data", async () => {
@@ -369,6 +416,7 @@ describe("POST /analyze/site", () => {
     const json = response._getJSONData();
 
     expect(response.statusCode).toBe(200);
+    expect(json.locale).toBe("en");
     expect(json.crawl.crawledPages).toBe(4);
     expect(json.crawl.blockedByRobots).toBeGreaterThan(0);
     expect(json.crawl.seededFromSitemaps).toBeGreaterThan(0);
@@ -838,5 +886,7 @@ describe("Documentation", () => {
     expect(json.openapi).toBe("3.1.0");
     expect(json.paths["/analyze"]).toBeDefined();
     expect(json.paths["/analyze/site"]).toBeDefined();
+    expect(json.components.schemas.AnalyzePageRequest.properties.locale).toBeDefined();
+    expect(json.components.schemas.AnalysisReport.properties.locale).toBeDefined();
   });
 });

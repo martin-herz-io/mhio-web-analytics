@@ -1,5 +1,6 @@
 import { createCheck } from "./checkHelpers.js";
-import type { AnalysisCheck, PageData } from "../types/analysis.js";
+import { text } from "../i18n/index.js";
+import type { AnalysisCheck, Locale, PageData } from "../types/analysis.js";
 
 function getHeadingHierarchyIssues(pageData: PageData): number {
   let previousLevel = 0;
@@ -15,7 +16,7 @@ function getHeadingHierarchyIssues(pageData: PageData): number {
   return issues;
 }
 
-export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
+export function runSeoChecks(pageData: PageData, locale: Locale): AnalysisCheck[] {
   const checks: AnalysisCheck[] = [];
   const titleLength = pageData.title.length;
   const descriptionLength = pageData.metaDescription.length;
@@ -42,10 +43,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 10,
       message:
         titleLength >= 30 && titleLength <= 60
-          ? "Title ist vorhanden und hat eine gute SEO-Laenge."
+          ? text(locale, {
+              en: "The title is present and falls within a strong SEO length range.",
+              de: "Der Title ist vorhanden und hat eine gute SEO-Länge.",
+            })
           : titleLength > 0
-            ? "Title ist vorhanden, koennte aber in der Laenge optimiert werden."
-            : "Title fehlt komplett.",
+            ? text(locale, {
+                en: "The title is present but could be improved in length.",
+                de: "Der Title ist vorhanden, könnte aber in der Länge optimiert werden.",
+              })
+            : text(locale, {
+                en: "The title is missing entirely.",
+                de: "Der Title fehlt komplett.",
+              }),
       details: { titleLength },
     }),
   );
@@ -60,10 +70,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 10,
       message:
         descriptionLength >= 120 && descriptionLength <= 160
-          ? "Meta Description ist vorhanden und hat eine solide Laenge."
+          ? text(locale, {
+              en: "The meta description is present and within a solid length range.",
+              de: "Die Meta Description ist vorhanden und hat eine solide Länge.",
+            })
           : descriptionLength > 0
-            ? "Meta Description ist vorhanden, aber nicht im idealen Bereich."
-            : "Meta Description fehlt.",
+            ? text(locale, {
+                en: "The meta description is present but not in the ideal range.",
+                de: "Die Meta Description ist vorhanden, aber nicht im idealen Bereich.",
+              })
+            : text(locale, {
+                en: "The meta description is missing.",
+                de: "Die Meta Description fehlt.",
+              }),
       details: { descriptionLength },
     }),
   );
@@ -77,10 +96,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 8,
       message:
         h1Count === 1
-          ? "Die Seite hat genau eine H1."
+          ? text(locale, {
+              en: "The page has exactly one H1.",
+              de: "Die Seite hat genau eine H1.",
+            })
           : h1Count > 1
-            ? "Die Seite hat mehrere H1-Ueberschriften."
-            : "Es wurde keine H1 gefunden.",
+            ? text(locale, {
+                en: "The page contains multiple H1 headings.",
+                de: "Die Seite hat mehrere H1-Überschriften.",
+              })
+            : text(locale, {
+                en: "No H1 was found.",
+                de: "Es wurde keine H1 gefunden.",
+              }),
       details: { h1Count },
     }),
   );
@@ -94,10 +122,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 6,
       message:
         hierarchyIssues === 0
-          ? "Die Heading-Hierarchie wirkt sauber aufgebaut."
+          ? text(locale, {
+              en: "The heading hierarchy looks clean and consistent.",
+              de: "Die Heading-Hierarchie wirkt sauber aufgebaut.",
+            })
           : hierarchyIssues <= 1
-            ? "Die Heading-Hierarchie hat kleinere Spruenge."
-            : "Die Heading-Hierarchie springt mehrfach und erschwert Strukturverstaendnis.",
+            ? text(locale, {
+                en: "The heading hierarchy has minor jumps.",
+                de: "Die Heading-Hierarchie hat kleinere Sprünge.",
+              })
+            : text(locale, {
+                en: "The heading hierarchy jumps multiple times and weakens structural clarity.",
+                de: "Die Heading-Hierarchie springt mehrfach und erschwert das Strukturverständnis.",
+              }),
       details: { hierarchyIssues },
     }),
   );
@@ -110,10 +147,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       score: !pageData.canonical ? 2 : canonicalMatchesFinalUrl ? 6 : 0,
       maxScore: 6,
       message: !pageData.canonical
-        ? "Canonical URL fehlt."
+        ? text(locale, {
+            en: "The canonical URL is missing.",
+            de: "Die Canonical-URL fehlt.",
+          })
         : canonicalMatchesFinalUrl
-          ? "Canonical URL ist gesetzt."
-          : "Canonical verweist nicht auf die aktuell analysierte Zielseite.",
+          ? text(locale, {
+              en: "The canonical URL is set.",
+              de: "Die Canonical-URL ist gesetzt.",
+            })
+          : text(locale, {
+              en: "The canonical does not point to the currently analyzed destination URL.",
+              de: "Die Canonical verweist nicht auf die aktuell analysierte Zielseite.",
+            }),
       details: { canonical: pageData.canonical, canonicalMatchesFinalUrl },
     }),
   );
@@ -125,7 +171,15 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       status: pageData.lang ? "good" : "warning",
       score: pageData.lang ? 5 : 2,
       maxScore: 5,
-      message: pageData.lang ? "Das HTML `lang` Attribut ist gesetzt." : "Das HTML `lang` Attribut fehlt.",
+      message: pageData.lang
+        ? text(locale, {
+            en: "The HTML `lang` attribute is set.",
+            de: "Das HTML-`lang`-Attribut ist gesetzt.",
+          })
+        : text(locale, {
+            en: "The HTML `lang` attribute is missing.",
+            de: "Das HTML-`lang`-Attribut fehlt.",
+          }),
       details: { lang: pageData.lang },
     }),
   );
@@ -149,10 +203,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 7,
       message:
         pageData.images.length === 0 || imagesWithoutAlt === 0
-          ? "Bilder sind sauber mit Alt-Texten versehen."
+          ? text(locale, {
+              en: "Images are properly covered with alt text.",
+              de: "Die Bilder sind sauber mit Alt-Texten versehen.",
+            })
           : imagesWithoutAlt <= Math.ceil(pageData.images.length * 0.25)
-            ? "Einige Bilder haben keinen Alt-Text."
-            : "Viele Bilder haben keinen Alt-Text.",
+            ? text(locale, {
+                en: "Some images are missing alt text.",
+                de: "Einige Bilder haben keinen Alt-Text.",
+              })
+            : text(locale, {
+                en: "Many images are missing alt text.",
+                de: "Viele Bilder haben keinen Alt-Text.",
+              }),
       details: {
         imageCount: pageData.images.length,
         imagesWithoutAlt,
@@ -168,8 +231,14 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       score: pageData.isNoindex ? 0 : 7,
       maxScore: 7,
       message: pageData.isNoindex
-        ? "Die Seite ist per Meta-Robots auf noindex gesetzt."
-        : "Die Seite ist grundsaetzlich indexierbar.",
+        ? text(locale, {
+            en: "The page is set to noindex via meta robots.",
+            de: "Die Seite ist per Meta-Robots auf noindex gesetzt.",
+          })
+        : text(locale, {
+            en: "The page is generally indexable.",
+            de: "Die Seite ist grundsätzlich indexierbar.",
+          }),
       details: {
         metaRobots: pageData.metaRobots,
         xRobotsTag: pageData.xRobotsTag,
@@ -194,10 +263,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
         : 5,
       maxScore: 5,
       message: !pageData.xRobotsTag
-        ? "Es wurde kein X-Robots-Tag Header erkannt."
+        ? text(locale, {
+            en: "No X-Robots-Tag header was detected.",
+            de: "Es wurde kein X-Robots-Tag-Header erkannt.",
+          })
         : pageData.xRobotsTag.toLowerCase().includes("noindex")
-          ? "Der Server sendet einen X-Robots-Tag mit noindex."
-          : "Ein X-Robots-Tag Header ist vorhanden und sollte fachlich geprueft werden.",
+          ? text(locale, {
+              en: "The server sends an X-Robots-Tag with noindex.",
+              de: "Der Server sendet einen X-Robots-Tag mit noindex.",
+            })
+          : text(locale, {
+              en: "An X-Robots-Tag header is present and should be reviewed.",
+              de: "Ein X-Robots-Tag-Header ist vorhanden und sollte fachlich geprüft werden.",
+            }),
       details: {
         xRobotsTag: pageData.xRobotsTag,
       },
@@ -213,10 +291,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 6,
       message:
         pageData.statusCode >= 200 && pageData.statusCode < 300
-          ? "Die Seite liefert einen erfolgreichen Statuscode."
+          ? text(locale, {
+              en: "The page returns a successful status code.",
+              de: "Die Seite liefert einen erfolgreichen Statuscode.",
+            })
           : pageData.statusCode < 400
-            ? "Die Seite wurde nur ueber eine Weiterleitung erreicht."
-            : "Die Seite liefert keinen erfolgreichen Statuscode.",
+            ? text(locale, {
+                en: "The page was reached through a redirect.",
+                de: "Die Seite wurde nur über eine Weiterleitung erreicht.",
+              })
+            : text(locale, {
+                en: "The page does not return a successful status code.",
+                de: "Die Seite liefert keinen erfolgreichen Statuscode.",
+              }),
       details: {
         statusCode: pageData.statusCode,
       },
@@ -231,8 +318,14 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       score: pageData.wasRedirected ? 3 : 6,
       maxScore: 6,
       message: pageData.wasRedirected
-        ? "Die URL fuehrt ueber mindestens eine Weiterleitung."
-        : "Die URL ist direkt ohne Weiterleitung erreichbar.",
+        ? text(locale, {
+            en: "The URL resolves through at least one redirect.",
+            de: "Die URL führt über mindestens eine Weiterleitung.",
+          })
+        : text(locale, {
+            en: "The URL is reachable directly without a redirect.",
+            de: "Die URL ist direkt ohne Weiterleitung erreichbar.",
+          }),
       details: {
         requestedUrl: pageData.requestedUrl,
         fetchedUrl: pageData.url,
@@ -251,10 +344,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 6,
       message:
         pageData.ogTitle && pageData.ogDescription
-          ? "Open Graph Basisdaten sind vorhanden."
+          ? text(locale, {
+              en: "Core Open Graph data is present.",
+              de: "Die Open-Graph-Basisdaten sind vorhanden.",
+            })
           : pageData.ogTitle || pageData.ogDescription
-            ? "Open Graph Daten sind nur teilweise vorhanden."
-            : "Open Graph Basisdaten fehlen.",
+            ? text(locale, {
+                en: "Open Graph data is only partially present.",
+                de: "Die Open-Graph-Daten sind nur teilweise vorhanden.",
+              })
+            : text(locale, {
+                en: "Core Open Graph data is missing.",
+                de: "Die Open-Graph-Basisdaten fehlen.",
+              }),
       details: {
         ogTitle: Boolean(pageData.ogTitle),
         ogDescription: Boolean(pageData.ogDescription),
@@ -281,10 +383,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 6,
       message:
         pageData.hreflangLinks.length === 0
-          ? "Es wurden keine hreflang-Verweise gefunden."
+          ? text(locale, {
+              en: "No hreflang references were found.",
+              de: "Es wurden keine hreflang-Verweise gefunden.",
+            })
           : pageData.hreflangLinks.some((entry) => entry.hreflang.toLowerCase() === "x-default")
-            ? "hreflang-Verweise inklusive x-default sind vorhanden."
-            : "hreflang-Verweise sind vorhanden, aber ohne x-default.",
+            ? text(locale, {
+                en: "hreflang references including x-default are present.",
+                de: "hreflang-Verweise inklusive x-default sind vorhanden.",
+              })
+            : text(locale, {
+                en: "hreflang references are present, but x-default is missing.",
+                de: "hreflang-Verweise sind vorhanden, aber ohne x-default.",
+              }),
       details: {
         hreflangCount: pageData.hreflangLinks.length,
         hreflangValues: pageData.hreflangLinks.map((entry) => entry.hreflang),
@@ -306,10 +417,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 7,
       message:
         pageData.structuredDataTypes.length === 0
-          ? "Es wurde kein strukturiertes JSON-LD Markup erkannt."
+          ? text(locale, {
+              en: "No structured JSON-LD markup was detected.",
+              de: "Es wurde kein strukturiertes JSON-LD-Markup erkannt.",
+            })
           : invalidStructuredData.length > 0
-            ? "Strukturierte Daten sind vorhanden, aber teilweise unvollstaendig."
-            : "Strukturierte Daten sind vorhanden.",
+            ? text(locale, {
+                en: "Structured data is present but partially incomplete.",
+                de: "Strukturierte Daten sind vorhanden, aber teilweise unvollständig.",
+              })
+            : text(locale, {
+                en: "Structured data is present.",
+                de: "Strukturierte Daten sind vorhanden.",
+              }),
       details: {
         structuredDataTypes: pageData.structuredDataTypes,
         invalidStructuredData,
@@ -326,10 +446,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 5,
       message:
         pageData.internalLinks >= 3
-          ? "Es sind mehrere interne Links vorhanden."
+          ? text(locale, {
+              en: "Multiple internal links are present.",
+              de: "Es sind mehrere interne Links vorhanden.",
+            })
           : pageData.internalLinks >= 1
-            ? "Einige interne Links sind vorhanden, es gibt aber noch Luft nach oben."
-            : "Es wurden keine internen Links gefunden.",
+            ? text(locale, {
+                en: "Some internal links are present, but there is still room to improve.",
+                de: "Einige interne Links sind vorhanden, es gibt aber noch Luft nach oben.",
+              })
+            : text(locale, {
+                en: "No internal links were found.",
+                de: "Es wurden keine internen Links gefunden.",
+              }),
       details: { internalLinks: pageData.internalLinks },
     }),
   );
@@ -353,10 +482,19 @@ export function runSeoChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 7,
       message:
         pageData.brokenInternalLinkCount === 0
-          ? "Es wurden keine defekten internen Links erkannt."
+          ? text(locale, {
+              en: "No broken internal links were detected.",
+              de: "Es wurden keine defekten internen Links erkannt.",
+            })
           : pageData.brokenInternalLinkCount <= 2
-            ? "Einige interne Links scheinen defekt zu sein."
-            : "Mehrere interne Links sind defekt und sollten dringend korrigiert werden.",
+            ? text(locale, {
+                en: "Some internal links appear to be broken.",
+                de: "Einige interne Links scheinen defekt zu sein.",
+              })
+            : text(locale, {
+                en: "Multiple internal links are broken and should be fixed urgently.",
+                de: "Mehrere interne Links sind defekt und sollten dringend korrigiert werden.",
+              }),
       details: {
         brokenInternalLinkCount: pageData.brokenInternalLinkCount,
       },

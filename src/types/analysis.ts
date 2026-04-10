@@ -1,5 +1,6 @@
 export type CheckCategory = "seo" | "content" | "ux";
 export type CheckStatus = "good" | "warning" | "bad";
+export type Locale = "en" | "de";
 
 export interface PageHeading {
   level: number;
@@ -114,6 +115,7 @@ export interface AnalysisReport {
   url: string;
   fetchedUrl: string;
   analyzedAt: string;
+  locale: Locale;
   scores: ScoreBreakdown;
   metrics: AnalysisMetrics;
   summary: ReportSummary;
@@ -127,6 +129,7 @@ export interface CrawlRequest {
   maxPages?: number;
   includePerformance?: boolean;
   performanceStrategy?: PerformanceStrategy;
+  locale?: Locale;
 }
 
 export interface CrawledPageResult {
@@ -202,6 +205,7 @@ export interface SiteIssue {
 export interface SiteAnalysisReport {
   url: string;
   analyzedAt: string;
+  locale: Locale;
   crawl: {
     maxPages: number;
     crawledPages: number;

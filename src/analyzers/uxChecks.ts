@@ -1,7 +1,8 @@
 import { createCheck } from "./checkHelpers.js";
-import type { AnalysisCheck, PageData } from "../types/analysis.js";
+import { text } from "../i18n/index.js";
+import type { AnalysisCheck, Locale, PageData } from "../types/analysis.js";
 
-export function runUxChecks(pageData: PageData): AnalysisCheck[] {
+export function runUxChecks(pageData: PageData, locale: Locale): AnalysisCheck[] {
   const linkDensity = pageData.wordCount === 0 ? pageData.links.length : pageData.links.length / pageData.wordCount;
   const paragraphsWithoutHeadings =
     pageData.headings.length === 0 && pageData.paragraphs.length >= 3 ? pageData.paragraphs.length : 0;
@@ -16,10 +17,19 @@ export function runUxChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 8,
       message:
         linkDensity <= 0.08
-          ? "Die Linkdichte wirkt ausgewogen."
+          ? text(locale, {
+              en: "Link density feels balanced.",
+              de: "Die Linkdichte wirkt ausgewogen.",
+            })
           : linkDensity <= 0.15
-            ? "Die Seite ist relativ linklastig."
-            : "Sehr hohe Linkdichte kann unruhig wirken und Fokus kosten.",
+            ? text(locale, {
+                en: "The page is relatively link-heavy.",
+                de: "Die Seite ist relativ linklastig.",
+              })
+            : text(locale, {
+                en: "Very high link density can feel noisy and reduce focus.",
+                de: "Eine sehr hohe Linkdichte kann unruhig wirken und Fokus kosten.",
+              }),
       details: {
         linkCount: pageData.links.length,
         wordCount: pageData.wordCount,
@@ -34,10 +44,19 @@ export function runUxChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 7,
       message:
         paragraphsWithoutHeadings === 0
-          ? "Die Seite hat eine erkennbare visuelle Textstruktur."
+          ? text(locale, {
+              en: "The page has a recognizable visual text structure.",
+              de: "Die Seite hat eine erkennbare visuelle Textstruktur.",
+            })
           : paragraphsWithoutHeadings <= 4
-            ? "Mehr visuelle Gliederung wuerde die Seite lesbarer machen."
-            : "Die Seite wirkt wie eine Textwand ohne klare Struktur.",
+            ? text(locale, {
+                en: "More visual structure would make the page easier to read.",
+                de: "Mehr visuelle Gliederung würde die Seite lesbarer machen.",
+              })
+            : text(locale, {
+                en: "The page feels like a wall of text without clear structure.",
+                de: "Die Seite wirkt wie eine Textwand ohne klare Struktur.",
+              }),
       details: {
         headingCount: pageData.headings.length,
         paragraphCount: pageData.paragraphs.length,
@@ -51,10 +70,19 @@ export function runUxChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 6,
       message:
         pageData.buttonCount >= 1
-          ? "Die Seite bietet mindestens ein klares Interaktionselement."
+          ? text(locale, {
+              en: "The page offers at least one clear interaction element.",
+              de: "Die Seite bietet mindestens ein klares Interaktionselement.",
+            })
           : pageData.wordCount < 80
-            ? "Auf kurzen Seiten ist ein CTA nicht immer zwingend, aber oft hilfreich."
-            : "Es fehlt ein klar erkennbares Interaktionselement oder CTA.",
+            ? text(locale, {
+                en: "On short pages, a CTA is not always required, but often helpful.",
+                de: "Auf kurzen Seiten ist ein CTA nicht immer zwingend, aber oft hilfreich.",
+              })
+            : text(locale, {
+                en: "A clearly recognizable interaction element or CTA is missing.",
+                de: "Es fehlt ein klar erkennbares Interaktionselement oder CTA.",
+              }),
       details: {
         buttonCount: pageData.buttonCount,
       },
@@ -67,10 +95,19 @@ export function runUxChecks(pageData: PageData): AnalysisCheck[] {
       maxScore: 5,
       message:
         imageToTextBalance <= 0.03
-          ? "Text und visuelle Elemente wirken grob ausgewogen."
+          ? text(locale, {
+              en: "Text and visual elements feel roughly balanced.",
+              de: "Text und visuelle Elemente wirken grob ausgewogen.",
+            })
           : imageToTextBalance <= 0.08
-            ? "Die Seite ist recht bildlastig."
-            : "Sehr hohe Bilddichte kann Inhalte und Fokus ueberlagern.",
+            ? text(locale, {
+                en: "The page is fairly image-heavy.",
+                de: "Die Seite ist recht bildlastig.",
+              })
+            : text(locale, {
+                en: "Very high image density can overpower content and focus.",
+                de: "Eine sehr hohe Bilddichte kann Inhalte und Fokus überlagern.",
+              }),
       details: {
         imageCount: pageData.images.length,
         wordCount: pageData.wordCount,

@@ -111,6 +111,12 @@ export const openApiDocument = {
             format: "uri",
             example: "https://example.com",
           },
+          locale: {
+            type: "string",
+            enum: ["en", "de"],
+            default: "en",
+            example: "en",
+          },
           includePerformance: {
             type: "boolean",
             example: true,
@@ -130,6 +136,12 @@ export const openApiDocument = {
             type: "string",
             format: "uri",
             example: "https://example.com",
+          },
+          locale: {
+            type: "string",
+            enum: ["en", "de"],
+            default: "en",
+            example: "de",
           },
           maxPages: {
             type: "integer",
@@ -185,7 +197,7 @@ export const openApiDocument = {
           id: { type: "string", example: "seo-meta-description" },
           category: { type: "string", enum: ["seo", "content", "ux"] },
           priority: { type: "string", enum: ["high", "medium", "low"] },
-          message: { type: "string", example: "Meta Description fehlt." },
+          message: { type: "string", example: "The meta description is missing." },
         },
       },
       AnalysisCheck: {
@@ -196,7 +208,7 @@ export const openApiDocument = {
           status: { type: "string", enum: ["good", "warning", "bad"] },
           score: { type: "integer", example: 5 },
           maxScore: { type: "integer", example: 10 },
-          message: { type: "string", example: "Title ist vorhanden, koennte aber in der Laenge optimiert werden." },
+          message: { type: "string", example: "The title is present but could be improved in length." },
           details: {
             type: "object",
             additionalProperties: true,
@@ -219,6 +231,7 @@ export const openApiDocument = {
       AnalysisReport: {
         type: "object",
         properties: {
+          locale: { type: "string", enum: ["en", "de"], example: "en" },
           url: { type: "string", format: "uri" },
           fetchedUrl: { type: "string", format: "uri" },
           analyzedAt: { type: "string", format: "date-time" },
@@ -301,7 +314,7 @@ export const openApiDocument = {
         properties: {
           id: { type: "string", example: "site-missing-meta-description" },
           severity: { type: "string", enum: ["high", "medium", "low"] },
-          message: { type: "string", example: "Mehrere Seiten haben keine Meta Description." },
+          message: { type: "string", example: "Multiple pages are missing a meta description." },
           affectedPages: {
             type: "array",
             items: { type: "string", format: "uri" },
@@ -364,6 +377,7 @@ export const openApiDocument = {
       SiteAnalysisReport: {
         type: "object",
         properties: {
+          locale: { type: "string", enum: ["en", "de"], example: "en" },
           url: { type: "string", format: "uri" },
           analyzedAt: { type: "string", format: "date-time" },
           crawl: {

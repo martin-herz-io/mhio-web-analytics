@@ -1,5 +1,7 @@
 import type { PerformanceMetric, PerformanceReport, PerformanceStrategy } from "../types/analysis.js";
 import { appConfig } from "../config/env.js";
+import { text } from "../i18n/index.js";
+import type { Locale } from "../types/analysis.js";
 
 const PAGESPEED_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed";
 
@@ -24,6 +26,7 @@ function readMetric(
 export async function fetchPagePerformance(
   url: string,
   strategy: PerformanceStrategy = appConfig.performance.strategy,
+  locale: Locale = "en",
 ): Promise<PerformanceReport> {
   const apiUrl = new URL(PAGESPEED_ENDPOINT);
   apiUrl.searchParams.set("url", url);
@@ -50,7 +53,10 @@ export async function fetchPagePerformance(
         score: null,
         metrics: [],
         fetchedAt: new Date().toISOString(),
-        message: `PageSpeed request failed with status ${response.status}`,
+        message: text(locale, {
+          en: `PageSpeed request failed with status ${response.status}`,
+          de: `Die PageSpeed-Anfrage ist mit Status ${response.status} fehlgeschlagen`,
+        }),
       };
     }
 
@@ -78,7 +84,13 @@ export async function fetchPagePerformance(
       score: typeof score === "number" ? Math.round(score * 100) : null,
       metrics,
       fetchedAt: new Date().toISOString(),
-      message: typeof score === "number" ? undefined : "PageSpeed returned no performance category score.",
+      message:
+        typeof score === "number"
+          ? undefined
+          : text(locale, {
+              en: "PageSpeed returned no performance category score.",
+              de: "PageSpeed hat keinen Score für die Performance-Kategorie zurückgegeben.",
+            }),
     };
   } catch (error) {
     return {
@@ -88,7 +100,12 @@ export async function fetchPagePerformance(
       score: null,
       metrics: [],
       fetchedAt: new Date().toISOString(),
-      message: error instanceof Error ? error.message : "Unknown PageSpeed error",
+      message: error instanceof Error
+        ? error.message
+        : text(locale, {
+            en: "Unknown PageSpeed error",
+            de: "Unbekannter PageSpeed-Fehler",
+          }),
     };
   }
 }

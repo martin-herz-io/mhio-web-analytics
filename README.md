@@ -1,4 +1,4 @@
-# mhio Web Analytics
+[![mhio Web Analytics - API-first Technical SEO Site Auditor](https://repository-images.githubusercontent.com/1207343392/633783a1-fe37-4e74-a036-81b8e70975e4)](https://github.com/martin-herz-io/mhio-web-analytics)
 
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-6.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
