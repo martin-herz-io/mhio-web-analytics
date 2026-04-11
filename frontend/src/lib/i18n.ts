@@ -183,6 +183,30 @@ const dictionary: Dictionary = {
     en: "Pages without meta description",
     de: "Seiten ohne Meta-Beschreibung",
   },
+  pagesWithPerformanceData: {
+    en: "Pages with performance data",
+    de: "Seiten mit Performance-Daten",
+  },
+  performance: {
+    en: "Performance",
+    de: "Performance",
+  },
+  performanceScore: {
+    en: "Performance score",
+    de: "Performance-Score",
+  },
+  performanceStatusAvailable: {
+    en: "Available",
+    de: "Verfügbar",
+  },
+  performanceStatusUnavailable: {
+    en: "Unavailable",
+    de: "Nicht verfügbar",
+  },
+  performanceStatusError: {
+    en: "Error",
+    de: "Fehler",
+  },
   noPagesMatch: {
     en: "No pages match the current filters.",
     de: "Keine Seiten passen zu den aktuellen Filtern.",

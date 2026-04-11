@@ -14,6 +14,17 @@ function readOptionalString(name: string): string | undefined {
   return value && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+function readOptionalStringAny(names: string[]): string | undefined {
+  for (const name of names) {
+    const value = readOptionalString(name);
+    if (value) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
 function readNumber(name: string, fallback: number): number {
   const value = process.env[name];
 
@@ -80,7 +91,7 @@ export const appConfig = {
   performance: {
     defaultEnabled: readBoolean("MHIO_PAGESPEED_DEFAULT_ENABLED", false),
     strategy: readEnum("MHIO_PAGESPEED_STRATEGY", performanceStrategies, "mobile"),
-    apiKey: readOptionalString("PAGESPEED_API_KEY"),
+    apiKey: readOptionalStringAny(["MHIO_PAGESPEED_API_KEY", "PAGESPEED_API_KEY"]),
     timeoutMs: clamp(readNumber("MHIO_PAGESPEED_TIMEOUT_MS", 20000), 1000, 120000),
   },
   docs: {

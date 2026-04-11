@@ -40,6 +40,22 @@ interface CheckResult {
   message: string;
 }
 
+interface PerformanceMetric {
+  id: string;
+  title: string;
+  displayValue: string;
+}
+
+interface PerformanceReport {
+  provider: "pagespeed-insights";
+  status: "available" | "unavailable" | "error";
+  strategy: "mobile" | "desktop";
+  score: number | null;
+  metrics: PerformanceMetric[];
+  fetchedAt: string;
+  message?: string;
+}
+
 interface PageReport {
   summary?: Summary;
   checks?: CheckResult[];
@@ -51,6 +67,7 @@ interface PageReport {
     externalLinkCount?: number;
     brokenInternalLinkCount?: number;
   };
+  performance?: PerformanceReport | null;
 }
 
 interface CrawledPageResult {
@@ -86,6 +103,7 @@ interface SiteMetrics {
   weaklyLinkedPages?: number;
   pagesWithBrokenInternalLinks?: number;
   pagesWithoutMetaDescription?: number;
+  pagesWithPerformanceData?: number;
 }
 
 interface LinkGraphReport {
@@ -111,6 +129,7 @@ export interface AnalyzeResponse {
     blockedByRobots?: number;
     crawledPages?: number;
   };
+  performance?: PerformanceReport | null;
 }
 
 interface AnalysisResultsProps {
@@ -231,6 +250,73 @@ function getPageIssueCount(page: CrawledPageResult): number {
   }
 
   return page.report?.summary?.issues?.length || 0;
+}
+
+function performanceStatusStyles(status: PerformanceReport["status"]) {
+  if (status === "available") {
+    return "border-emerald-500/25 bg-emerald-500/10 text-emerald-200";
+  }
+  if (status === "unavailable") {
+    return "border-amber-500/25 bg-amber-500/10 text-amber-200";
+  }
+  return "border-red-500/25 bg-red-500/10 text-red-200";
+}
+
+function PerformancePanel({
+  performance,
+  label,
+  compact = false,
+}: {
+  performance: PerformanceReport | null | undefined;
+  label: LabelFn;
+  compact?: boolean;
+}) {
+  if (!performance) {
+    return null;
+  }
+
+  return (
+    <section className={cn("rounded-xl border border-zinc-800 bg-zinc-900/80 p-3", compact ? "" : "p-4")}>
+      <header className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h5 className="text-xs font-medium uppercase tracking-wide text-zinc-400">{label("performance")}</h5>
+        <span className={cn("rounded-full border px-2 py-0.5 text-[11px]", performanceStatusStyles(performance.status))}>
+          {label(
+            performance.status === "available"
+              ? "performanceStatusAvailable"
+              : performance.status === "unavailable"
+                ? "performanceStatusUnavailable"
+                : "performanceStatusError",
+          )}
+        </span>
+      </header>
+
+      <div className="grid gap-2 text-xs text-zinc-300 sm:grid-cols-3">
+        <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          {label("performanceScore")}:{" "}
+          <span className="font-medium text-zinc-100">{performance.score === null ? label("notAvailable") : performance.score}</span>
+        </p>
+        <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          {label("performanceStrategy")}: <span className="font-medium text-zinc-100">{performance.strategy}</span>
+        </p>
+        <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+          API: <span className="font-medium text-zinc-100">{performance.provider}</span>
+        </p>
+      </div>
+
+      {performance.message ? <p className="mt-2 text-xs text-zinc-500">{performance.message}</p> : null}
+
+      {performance.metrics.length > 0 ? (
+        <ul className="mt-2 grid gap-2 sm:grid-cols-2">
+          {performance.metrics.slice(0, 6).map((metric) => (
+            <li key={metric.id} className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-300">
+              <p className="text-zinc-500">{metric.title}</p>
+              <p className="mt-1 font-medium text-zinc-100">{metric.displayValue}</p>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
+  );
 }
 
 export function AnalysisResults({ result, label }: AnalysisResultsProps) {
@@ -420,6 +506,10 @@ export function AnalysisResults({ result, label }: AnalysisResultsProps) {
               <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
                 {label("pagesWithoutMetaDescription")}:{" "}
                 <span className="text-zinc-100">{result.metrics?.pagesWithoutMetaDescription ?? 0}</span>
+              </p>
+              <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2">
+                {label("pagesWithPerformanceData")}:{" "}
+                <span className="text-zinc-100">{result.metrics?.pagesWithPerformanceData ?? 0}</span>
               </p>
             </div>
           </section>
@@ -665,6 +755,12 @@ export function AnalysisResults({ result, label }: AnalysisResultsProps) {
                       ) : null}
                     </ul>
                   ) : null}
+
+                  {pageDetailTab === "overview" ? (
+                    <div className="mt-3">
+                      <PerformancePanel performance={selectedPage.report?.performance} label={label} compact />
+                    </div>
+                  ) : null}
                 </>
               ) : (
                 <p className="rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-zinc-500">{label("noPagesMatch")}</p>
@@ -806,6 +902,8 @@ export function AnalysisResults({ result, label }: AnalysisResultsProps) {
               <p className="text-sm text-zinc-500">{label("noRecommendations")}</p>
             )}
           </section>
+
+          <PerformancePanel performance={result.performance} label={label} />
 
           <section className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4">
             <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-zinc-100">

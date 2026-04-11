@@ -127,6 +127,7 @@ Important options include:
 - `MHIO_CRAWLER_CONCURRENCY` to adjust parallel crawl workers
 - `MHIO_BROKEN_LINK_CHECK_METHOD` to switch between `HEAD` and `GET`
 - `MHIO_PAGESPEED_DEFAULT_ENABLED` and `MHIO_PAGESPEED_STRATEGY` for performance defaults
+- `MHIO_PAGESPEED_API_KEY` to authenticate PageSpeed Insights requests
 - `MHIO_DOCS_ENABLED` to enable or disable Swagger UI
 - `MHIO_DEFAULT_LOCALE` to configure the default API response language (`en` or `de`)
 

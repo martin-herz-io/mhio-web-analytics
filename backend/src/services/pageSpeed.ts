@@ -46,6 +46,14 @@ export async function fetchPagePerformance(
     });
 
     if (!response.ok) {
+      let detailedMessage: string | undefined;
+      try {
+        const errorPayload = (await response.json()) as { error?: { message?: string } };
+        detailedMessage = errorPayload.error?.message;
+      } catch {
+        detailedMessage = undefined;
+      }
+
       return {
         provider: "pagespeed-insights",
         status: "error",
@@ -53,10 +61,12 @@ export async function fetchPagePerformance(
         score: null,
         metrics: [],
         fetchedAt: new Date().toISOString(),
-        message: text(locale, {
-          en: `PageSpeed request failed with status ${response.status}`,
-          de: `Die PageSpeed-Anfrage ist mit Status ${response.status} fehlgeschlagen`,
-        }),
+        message:
+          detailedMessage ||
+          text(locale, {
+            en: `PageSpeed request failed with status ${response.status}`,
+            de: `Die PageSpeed-Anfrage ist mit Status ${response.status} fehlgeschlagen`,
+          }),
       };
     }
 
