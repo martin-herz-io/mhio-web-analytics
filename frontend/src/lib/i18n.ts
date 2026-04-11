@@ -7,6 +7,134 @@ const dictionary: Dictionary = {
     en: "API-first technical SEO and content analysis platform",
     de: "API-first Plattform für technische SEO- und Inhaltsanalyse",
   },
+  navHome: {
+    en: "Home",
+    de: "Start",
+  },
+  navDocs: {
+    en: "Docs",
+    de: "Dokumentation",
+  },
+  docsTitle: {
+    en: "API Documentation",
+    de: "API-Dokumentation",
+  },
+  docsSubtitle: {
+    en: "Documentation view for endpoints, request/response schemas, and components.",
+    de: "Dokumentationsansicht für Endpunkte, Request-/Response-Schemas und Komponenten.",
+  },
+  docsLoading: {
+    en: "Loading API schema...",
+    de: "Lade API-Schema...",
+  },
+  copy: {
+    en: "Copy",
+    de: "Kopieren",
+  },
+  copied: {
+    en: "Copied",
+    de: "Kopiert",
+  },
+  apiEndpoints: {
+    en: "Endpoints",
+    de: "Endpunkte",
+  },
+  endpointOverview: {
+    en: "Endpoint overview",
+    de: "Endpoint-Überblick",
+  },
+  openApiVersion: {
+    en: "OpenAPI",
+    de: "OpenAPI",
+  },
+  apiVersion: {
+    en: "API version",
+    de: "API-Version",
+  },
+  server: {
+    en: "Server",
+    de: "Server",
+  },
+  path: {
+    en: "Path",
+    de: "Pfad",
+  },
+  openApiJson: {
+    en: "OpenAPI JSON",
+    de: "OpenAPI JSON",
+  },
+  swaggerUi: {
+    en: "Swagger UI",
+    de: "Swagger UI",
+  },
+  requestSchema: {
+    en: "Request schema",
+    de: "Request-Schema",
+  },
+  responseSchemas: {
+    en: "Response schemas",
+    de: "Response-Schemas",
+  },
+  schemaOverview: {
+    en: "Schema overview",
+    de: "Schema-Übersicht",
+  },
+  schemaProperties: {
+    en: "Properties",
+    de: "Properties",
+  },
+  searchSchemas: {
+    en: "Search schemas...",
+    de: "Schemas suchen...",
+  },
+  noSchemasFound: {
+    en: "No schemas found for the current search.",
+    de: "Keine Schemas für die aktuelle Suche gefunden.",
+  },
+  tag: {
+    en: "Tag",
+    de: "Kategorie",
+  },
+  requestBody: {
+    en: "Request body",
+    de: "Request-Body",
+  },
+  contentType: {
+    en: "Content type",
+    de: "Content-Type",
+  },
+  responses: {
+    en: "Responses",
+    de: "Responses",
+  },
+  responseSchema: {
+    en: "Response schema",
+    de: "Response-Schema",
+  },
+  status: {
+    en: "Status",
+    de: "Status",
+  },
+  parameter: {
+    en: "Parameter",
+    de: "Parameter",
+  },
+  type: {
+    en: "Type",
+    de: "Typ",
+  },
+  required: {
+    en: "Required",
+    de: "Pflicht",
+  },
+  example: {
+    en: "Example",
+    de: "Beispiel",
+  },
+  noParameters: {
+    en: "No parameters documented.",
+    de: "Keine Parameter dokumentiert.",
+  },
   uiLanguage: {
     en: "UI language",
     de: "UI-Sprache",
