@@ -2,6 +2,7 @@ import "dotenv/config";
 
 const performanceStrategies = ["mobile", "desktop"] as const;
 const brokenLinkCheckMethods = ["HEAD", "GET"] as const;
+const locales = ["en", "de"] as const;
 
 function readString(name: string, fallback: string): string {
   const value = process.env[name];
@@ -84,5 +85,8 @@ export const appConfig = {
   },
   docs: {
     enabled: readBoolean("MHIO_DOCS_ENABLED", true),
+  },
+  i18n: {
+    defaultLocale: readEnum("MHIO_DEFAULT_LOCALE", locales, "en"),
   },
 } as const;

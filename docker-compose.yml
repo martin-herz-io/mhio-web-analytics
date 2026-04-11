@@ -2,13 +2,19 @@ services:
   mhio-web-analytics:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: backend/Dockerfile
     image: mhio-web-analytics:latest
     env_file:
-      - path: .env.example
-        required: true
       - path: .env
         required: false
+    environment:
+      PORT: 3000
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped

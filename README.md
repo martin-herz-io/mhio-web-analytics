@@ -18,6 +18,7 @@ API-first open source website analyzer for SEO, content quality, UX heuristics, 
 - SEO audits for titles, meta descriptions, headings, canonicals, `noindex`, `hreflang`, structured data, and more
 - Content and UX heuristics such as long paragraphs, heading distribution, thin content, boilerplate-heavy pages, and weak CTA structure
 - Site-level signals for duplicate titles, duplicate content, broken internal links, canonical clusters, and internal linking quality
+- Internationalized API output (`en` and `de`) with request-level locale overrides
 - Optional Google PageSpeed Insights integration
 - Swagger UI and OpenAPI JSON for API discovery
 - Docker-ready runtime for local and server deployment
@@ -36,6 +37,8 @@ API-first open source website analyzer for SEO, content quality, UX heuristics, 
 - Node.js
 - TypeScript
 - Express
+- React (Vite)
+- Tailwind CSS
 - Zod
 - Cheerio
 - Swagger UI Express
@@ -62,7 +65,10 @@ cp .env.example .env
 npm run dev
 ```
 
-The API will be available at `http://localhost:3000` by default.
+- Web UI: `http://localhost:5173`
+- API: `http://localhost:3000`
+
+The Vite dev server proxies API calls for `/analyze`, `/docs`, `/openapi.json`, and `/health` to the backend.
 
 ### Build
 
@@ -70,6 +76,8 @@ The API will be available at `http://localhost:3000` by default.
 npm run build
 npm start
 ```
+
+After build, the React frontend is served by Express from the same backend process.
 
 ### Test
 
@@ -85,7 +93,7 @@ Environment variables:
 cp .env.example .env
 ```
 
-`docker-compose.yml` already loads `.env.example` as defaults and applies `.env` as optional overrides.
+`docker-compose.yml` uses optional `.env` overrides. If no `.env` is present, built-in defaults from backend config are used.
 
 Run with Docker Compose:
 
@@ -105,7 +113,7 @@ Stop the stack:
 docker compose down
 ```
 
-The service receives all runtime variables via `env_file` from `.env.example` and optional `.env` overrides.
+In Docker, both API and Web UI are served from the same backend service on `http://localhost:3000`.
 
 ## Configuration
 
@@ -120,6 +128,7 @@ Important options include:
 - `MHIO_BROKEN_LINK_CHECK_METHOD` to switch between `HEAD` and `GET`
 - `MHIO_PAGESPEED_DEFAULT_ENABLED` and `MHIO_PAGESPEED_STRATEGY` for performance defaults
 - `MHIO_DOCS_ENABLED` to enable or disable Swagger UI
+- `MHIO_DEFAULT_LOCALE` to configure the default API response language (`en` or `de`)
 
 ## API Examples
 
@@ -130,6 +139,7 @@ curl -X POST http://localhost:3000/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
+    "locale": "en",
     "includePerformance": false
   }'
 ```
@@ -141,6 +151,7 @@ curl -X POST http://localhost:3000/analyze/site \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
+    "locale": "de",
     "maxPages": 10,
     "includePerformance": false
   }'
@@ -201,16 +212,21 @@ The project currently includes checks and heuristics in areas such as:
 ## Project Structure
 
 ```text
-src/
-  analyzers/
-  config/
-  docs/
-  routes/
-  scoring/
-  services/
-  types/
-tests/
-Dockerfile
+backend/
+  src/
+    analyzers/
+    config/
+    docs/
+    routes/
+    scoring/
+    services/
+    types/
+  tests/
+  public/
+  Dockerfile
+frontend/
+  src/
+vite.config.ts
 .env.example
 ```
 
