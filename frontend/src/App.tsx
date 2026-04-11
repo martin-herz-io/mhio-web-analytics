@@ -8,6 +8,7 @@ import {
   IconSearch,
 } from "@tabler/icons-react";
 
+import { AnalysisResults, AnalysisResultsSkeleton, type AnalyzeResponse } from "./components/results/AnalysisResults";
 import { Button } from "./components/ui/Button";
 import { SelectInput } from "./components/ui/SelectInput";
 import { SwitchInput } from "./components/ui/Switch";
@@ -18,46 +19,6 @@ import { t } from "./lib/i18n";
 const UI_LOCALE_STORAGE_KEY = "mhio-ui-locale";
 
 type PerformanceStrategy = "mobile" | "desktop";
-
-interface ScoreBreakdown {
-  overall?: number;
-  seo?: number;
-  content?: number;
-  ux?: number;
-}
-
-interface Summary {
-  strengths?: string[];
-  issues?: string[];
-}
-
-interface Recommendation {
-  id: string;
-  message: string;
-}
-
-interface CheckResult {
-  id: string;
-  status: "good" | "warning" | "bad";
-  message: string;
-}
-
-interface SiteIssue {
-  id: string;
-  message: string;
-}
-
-interface AnalyzeResponse {
-  scores?: ScoreBreakdown;
-  summary?: Summary;
-  recommendations?: Recommendation[];
-  checks?: CheckResult[];
-  siteIssues?: SiteIssue[];
-}
-
-function scoreValue(value: number | undefined, fallback: string): string {
-  return typeof value === "number" ? String(value) : fallback;
-}
 
 function useLabel(locale: Locale) {
   return (key: Parameters<typeof t>[1]) => t(locale, key);
@@ -253,96 +214,12 @@ export function App() {
           <section className="mt-8 border-t border-zinc-900 pt-6">
             <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-400">{label("result")}</h2>
 
-            {!result ? (
+            {loading && !result ? (
+              <AnalysisResultsSkeleton label={label} />
+            ) : !result ? (
               <p className="mt-4 text-sm text-zinc-500">{label("noResultHint")}</p>
             ) : (
-              <div className="mt-4 space-y-6">
-                <section className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-                    <p className="text-xs uppercase tracking-wide text-zinc-500">{label("overall")}</p>
-                    <p className="mt-1 text-2xl font-semibold text-zinc-100">
-                      {scoreValue(result.scores?.overall, label("notAvailable"))}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-                    <p className="text-xs uppercase tracking-wide text-zinc-500">{label("seo")}</p>
-                    <p className="mt-1 text-2xl font-semibold text-zinc-100">
-                      {scoreValue(result.scores?.seo, label("notAvailable"))}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-                    <p className="text-xs uppercase tracking-wide text-zinc-500">{label("content")}</p>
-                    <p className="mt-1 text-2xl font-semibold text-zinc-100">
-                      {scoreValue(result.scores?.content, label("notAvailable"))}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-3">
-                    <p className="text-xs uppercase tracking-wide text-zinc-500">{label("ux")}</p>
-                    <p className="mt-1 text-2xl font-semibold text-zinc-100">
-                      {scoreValue(result.scores?.ux, label("notAvailable"))}
-                    </p>
-                  </div>
-                </section>
-
-                <section className="grid gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                    <h3 className="mb-3 text-sm font-medium text-zinc-200">{label("strengths")}</h3>
-                    <ul className="space-y-2 text-sm text-zinc-400">
-                      {(result.summary?.strengths || []).slice(0, 5).map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                    <h3 className="mb-3 text-sm font-medium text-zinc-200">{label("issues")}</h3>
-                    <ul className="space-y-2 text-sm text-zinc-400">
-                      {(result.summary?.issues || []).slice(0, 5).map((item) => (
-                        <li key={item}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </section>
-
-                <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                  <h3 className="mb-3 text-sm font-medium text-zinc-200">{label("recommendations")}</h3>
-                  <ul className="space-y-2 text-sm text-zinc-400">
-                    {(result.recommendations || []).slice(0, 8).map((item) => (
-                      <li key={item.id}>• {item.message}</li>
-                    ))}
-                  </ul>
-                </section>
-
-                {(result.siteIssues || []).length > 0 ? (
-                  <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                    <h3 className="mb-3 text-sm font-medium text-zinc-200">{label("siteIssues")}</h3>
-                    <ul className="space-y-2 text-sm text-zinc-400">
-                      {(result.siteIssues || []).map((item) => (
-                        <li key={item.id}>• {item.message}</li>
-                      ))}
-                    </ul>
-                  </section>
-                ) : null}
-
-                <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                  <h3 className="mb-3 text-sm font-medium text-zinc-200">{label("checks")}</h3>
-                  <ul className="space-y-2 text-sm text-zinc-400">
-                    {(result.checks || []).slice(0, 10).map((item) => (
-                      <li key={item.id} className="flex items-start gap-2">
-                        <span
-                          className={
-                            item.status === "good"
-                              ? "mt-1 inline-block h-2 w-2 rounded-full bg-emerald-400"
-                              : item.status === "warning"
-                                ? "mt-1 inline-block h-2 w-2 rounded-full bg-amber-400"
-                                : "mt-1 inline-block h-2 w-2 rounded-full bg-red-400"
-                          }
-                        />
-                        <span>{item.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              </div>
+              <AnalysisResults result={result} label={label} />
             )}
           </section>
         </section>
